@@ -26,7 +26,7 @@ export NCCL_DEBUG=WARN
 export TORCH_CPP_LOG_LEVEL=ERROR
 
 ## TORCHRUN path and 
-export TORCHRUN=./efficeint_gpu_training/bin/torchrun
+export TORCHRUN=./efficient_gpu_training/bin/torchrun
 export TRAIN_SCRIPT=./src/1.performance.py
 export CONFIG_PATH=./src/config.yaml
 

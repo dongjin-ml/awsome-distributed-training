@@ -1,0 +1,5 @@
+#!/fsx/ubuntu/awsome-distributed-training/3.test_cases/21.efficient-gpu-training/efficient_gpu_training/bin/python3.11
+
+import pydoc
+if __name__ == '__main__':
+    pydoc.cli()

@@ -50,7 +50,7 @@ GPUS_PER_NODE=4 # 4 for G5.12x, 8 for P4/P5
 #export HF_HUB_ETAG_TIMEOUT=60
 
 ## TORCHRUN path and 
-export TORCHRUN=./efficeint_gpu_training/bin/torchrun
+export TORCHRUN=./efficient_gpu_training/bin/torchrun
 export TRAIN_SCRIPT=./src/1.performance.py
 export CONFIG_PATH=./src/config.yaml
 

@@ -15,7 +15,7 @@ source ./miniconda3/bin/activate
 
 conda create -y -p ./efficient_gpu_training python=3.11
 
-source activate ./efficeint_gpu_training/
+source activate ./efficient_gpu_training/
 
 #conda install -y pytorch=2.4.1 fsspec=2023.9.2 pytorch-cuda=12.1 "numpy=1.*" -c pytorch -c nvidia
 pip install -r requirements.txt
