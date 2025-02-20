@@ -155,5 +155,5 @@ wandb/
 *.sqsh
 
 efficeint_gpu_training/
-miniconda3/
+3.test_cases/21.efficient-gpu-training/miniconda3/
 
