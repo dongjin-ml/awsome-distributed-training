@@ -153,3 +153,7 @@ wandb/
 
 # Enroot container image
 *.sqsh
+
+efficeint_gpu_training/
+miniconda3/
+

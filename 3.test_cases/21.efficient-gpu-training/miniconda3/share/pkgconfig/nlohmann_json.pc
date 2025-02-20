@@ -1,0 +1,4 @@
+Name: nlohmann_json
+Description: JSON for Modern C++
+Version: 3.11.2
+Cflags: -I/fsx/ubuntu/awsome-distributed-training/3.test_cases/21.efficient-gpu-training/miniconda3/include

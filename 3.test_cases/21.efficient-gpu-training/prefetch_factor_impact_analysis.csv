@@ -1,0 +1,5 @@
+num_workers,pin_memory,use_prefetch,base_prefetch_factor,compare_prefetch_factor,throughput_change_pct,time_change_pct,memory_change_pct
+8,True,False,2,4,1.612956569899932,1.5873532513448454,-100.0
+8,True,False,2,8,1.616057209318437,1.5903561441963117,-100.0
+8,True,True,2,4,-0.01003235627160027,-0.01003336285430789,0.0
+8,True,True,2,8,-0.03389883453798893,-0.03391032974455419,0.0
