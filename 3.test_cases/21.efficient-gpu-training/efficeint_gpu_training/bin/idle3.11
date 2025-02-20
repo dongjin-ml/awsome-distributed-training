@@ -1,5 +1,0 @@
-#!/fsx/ubuntu/awsome-distributed-training/3.test_cases/21.efficient-gpu-training/efficeint_gpu_training/bin/python3.11
-
-from idlelib.pyshell import main
-if __name__ == '__main__':
-    main()

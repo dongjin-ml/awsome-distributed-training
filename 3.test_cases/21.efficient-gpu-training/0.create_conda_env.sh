@@ -13,7 +13,7 @@ chmod +x Miniconda3-latest-Linux-x86_64.sh
 
 source ./miniconda3/bin/activate
 
-conda create -y -p ./efficeint_gpu_training python=3.11
+conda create -y -p ./efficient_gpu_training python=3.11
 
 source activate ./efficeint_gpu_training/
 
