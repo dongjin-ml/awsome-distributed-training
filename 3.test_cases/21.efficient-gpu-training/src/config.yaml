@@ -6,7 +6,7 @@ report_to: "none"
 
 # Default training parameters
 num_epochs: 3
-per_device_train_batch_size: 10
+per_device_train_batch_size: 20
 learning_rate: 2e-5
 weight_decay: 0.01
 adam_beta1: 0.9

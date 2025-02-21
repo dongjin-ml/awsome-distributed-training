@@ -27,7 +27,7 @@ export TORCH_CPP_LOG_LEVEL=ERROR
 
 ## TORCHRUN path and 
 export TORCHRUN=./efficient_gpu_training/bin/torchrun
-export TRAIN_SCRIPT=./src/1.performance.py
+export TRAIN_SCRIPT=./src/dataloader_optimization.py
 export CONFIG_PATH=./src/config.yaml
 
 ###########################
