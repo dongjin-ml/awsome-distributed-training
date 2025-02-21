@@ -5,8 +5,8 @@ log_level: "error"
 report_to: "none"
 
 # Default training parameters
-num_epochs: 3
-per_device_train_batch_size: 20
+num_epochs: 2
+per_device_train_batch_size: 5
 learning_rate: 2e-5
 weight_decay: 0.01
 adam_beta1: 0.9
@@ -14,8 +14,7 @@ adam_beta2: 0.999
 adam_epsilon: 1e-8
 
 # Dataset parameters
-seq_len: 512
-dataset_size: 1024
+max_seq_length: 512
 
 # Optimization flags
 fp16: false
@@ -27,6 +26,12 @@ use_adafactor: false
 dataloader_prefetch: false
 num_workers: 1
 pin_memory: false
+use_cache: false # dataloader cache
+
+
+# Heavy usage params
+cpu_iterations: 3000 # CPU 연산량 조절용 파라미터
+gpu_iterations: 2 # CPU 연산량 조절용 파라미터
 
 # output_dir: "./output"
 # log_level: "error"
