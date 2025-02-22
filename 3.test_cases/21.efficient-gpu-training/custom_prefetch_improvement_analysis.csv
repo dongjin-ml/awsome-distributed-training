@@ -1,4 +1,0 @@
-num_workers,pin_memory,prefetch_factor,throughput_increase_pct,time_decrease_pct,memory_increase_pct
-8,True,2,1.7148113634365185,1.6859013357546608,-100.0
-8,True,4,0.09019558565503781,0.09011430652849672,0.0
-8,True,8,0.06325183271081328,0.06321185005716154,0.0

@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
-from dataclasses import dataclass
+
+from functools import partial
 from typing import Optional, Tuple
+from dataclasses import dataclass
+from torch.utils.checkpoint import checkpoint
 
 @dataclass
 class ModelOutput:
@@ -49,25 +52,26 @@ class EnhancedTransformerBlock(nn.Module):
 class EnhancedModel(nn.Module):
     def __init__(self, 
                  vocab_size=30000,
-                 hidden_size=768,         # 적절한 크기로 조정
-                 intermediate_size=3072,   # hidden_size의 4배
-                 num_layers=12,           # 적절한 수로 조정
-                 num_attention_heads=12,   # hidden_size와 호환되는 수로 조정
+                 hidden_size=768,
+                 intermediate_size=3072,
+                 num_layers=12,
+                 num_attention_heads=12,
                  max_seq_length=512,
                  dropout_rate=0.1):
         super().__init__()
+        
+        # Gradient checkpointing 관련 속성 추가
+        self.gradient_checkpointing = False
         
         self.embeddings = nn.Embedding(vocab_size, hidden_size)
         self.position_embeddings = nn.Embedding(max_seq_length, hidden_size)
         self.token_type_embeddings = nn.Embedding(2, hidden_size)
         
-        # Transformer layers
         self.transformer_blocks = nn.ModuleList([
             EnhancedTransformerBlock(hidden_size, intermediate_size, num_attention_heads, dropout_rate)
             for _ in range(num_layers)
         ])
         
-        # 중간 레이어 (2개로 조정)
         self.intermediate_layers = nn.ModuleList([
             nn.Sequential(
                 nn.Linear(hidden_size, hidden_size),
@@ -77,13 +81,11 @@ class EnhancedModel(nn.Module):
             for _ in range(2)
         ])
         
-        # 단일 pooler로 변경
         self.pooler = nn.Sequential(
             nn.Linear(hidden_size, hidden_size),
             nn.Tanh()
         )
         
-        # 간소화된 classifier
         self.classifier = nn.Sequential(
             nn.Dropout(dropout_rate),
             nn.Linear(hidden_size, hidden_size),
@@ -95,16 +97,22 @@ class EnhancedModel(nn.Module):
         self.layer_norm = nn.LayerNorm(hidden_size)
         self.dropout = nn.Dropout(dropout_rate)
 
+    # Gradient checkpointing 활성화/비활성화 메서드 추가
+    def gradient_checkpointing_enable(self):
+        self.gradient_checkpointing = True
+
+    def gradient_checkpointing_disable(self):
+        self.gradient_checkpointing = False
+
+
+
     def forward(self, input_ids, attention_mask=None, token_type_ids=None, labels=None):
-        # Position ids
         position_ids = torch.arange(input_ids.size(1), dtype=torch.long, device=input_ids.device)
         position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
         
-        # Embeddings
         embeddings = self.embeddings(input_ids)
         position_embeddings = self.position_embeddings(position_ids)
         
-        # Add token type embeddings
         if token_type_ids is None:
             token_type_ids = torch.zeros_like(input_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
@@ -112,15 +120,19 @@ class EnhancedModel(nn.Module):
         x = embeddings + position_embeddings + token_type_embeddings
         x = self.dropout(x)
         
-        # Transformer layers와 중간 처리
         hidden_states = []
         for transformer in self.transformer_blocks:
-            x = transformer(x, attention_mask)
+            if self.gradient_checkpointing:
+                x = checkpoint(partial(transformer, attention_mask=attention_mask), x)
+            else:
+                x = transformer(x, attention_mask)
             hidden_states.append(x)
         
-        # 중간 레이어 처리
         for layer in self.intermediate_layers:
-            x = x + layer(x)  # residual connection
+            if self.gradient_checkpointing:
+                x = x + checkpoint(layer, x)
+            else:
+                x = x + layer(x)
             hidden_states.append(x)
         
         x = self.layer_norm(x)
@@ -128,10 +140,7 @@ class EnhancedModel(nn.Module):
         if attention_mask is not None:
             x = x * attention_mask.unsqueeze(-1)
         
-        # Pooling
         pooled_output = self.pooler(x[:, 0])
-        
-        # Classification
         logits = self.classifier(pooled_output)
         
         outputs = ModelOutput(
@@ -139,7 +148,6 @@ class EnhancedModel(nn.Module):
             hidden_states=tuple(hidden_states)
         )
         
-        # Loss 계산
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, 2), labels.view(-1))

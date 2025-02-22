@@ -1,3 +1,0 @@
-num_workers,pin_memory,throughput_increase_pct,time_decrease_pct
-8,False,2.352847222215838,2.2987608904592864
-8,True,-0.3613791446081703,-0.36268983001345206
