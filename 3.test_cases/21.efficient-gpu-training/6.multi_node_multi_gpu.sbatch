@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --nodes=4                               # 4개 노드로 변경 (원하는 노드 수로 조정 가능)
+#SBATCH --nodes=4                                    # 4개 노드로 변경 (원하는 노드 수로 조정 가능)
 #SBATCH --job-name=6.MULTI-NODE-MULTI-GPU
 #SBATCH --output=logs/%x_%j.out 
 #SBATCH --error=logs/%x_%j.err  
@@ -28,8 +28,8 @@ export NCCL_P2P_DISABLE=0      # P2P 통신 활성화
 
 ## TORCHRUN path and scripts
 export TORCHRUN=./efficient_gpu_training/bin/torchrun
-export TRAIN_SCRIPT=./src/4.storage.py
-export CONFIG_PATH=./src/4.config_storage.yaml
+export TRAIN_SCRIPT=./src/5.put_it_all_together.py
+export CONFIG_PATH=./src/5.config_put_it_all_together.yaml
 
 ###########################
 ####### Torch Dist  #######

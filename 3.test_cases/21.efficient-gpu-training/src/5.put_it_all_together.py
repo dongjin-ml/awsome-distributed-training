@@ -21,7 +21,7 @@ from model import get_model
 from utils.train_utils import print_gpu_utilization, is_main_process, main_process_print
 from custom_dataset import StorageConfig, SequenceDataset, StorageAwareDataLoader, PrefetchDataLoader
 
-def benchmark_storage(
+def benchmark_put_it_all_together(
     dataset,
     batch_size,
     num_workers,
@@ -216,7 +216,7 @@ def main():
     storage_config = StorageConfig(
         storage_type="lustre",  # "local", "s3", "lustre"
         base_path="datasets",
-        s3_bucket="efficient-gpu-training"
+        #s3_bucket="efficient-gpu-training"
     )
 
     # C/GPU 연산량 조절
@@ -230,61 +230,59 @@ def main():
         use_cache=config.get('dataloader_cache', False) # dataloader cache 옵션 
     )
 
-    # Test setting
-    storage_type_options = ["s3", "lustre"]
+    # default setting
+    # num_workers = 0
+    # pin_memory = False
+    # prefetch_factor = None
+    # dataloader_prefetch_cuda_steam = False
+    # gradient_checkpointing = False
+    # gradient_accumulation_steps = 1
+    # mixed_precision = "no"
+    # tf32 = False
+    # storage_type = "s3"
+    # torch.backends.cuda.matmul.allow_tf32 = True if tf32 else False
+    # torch.backends.cudnn.allow_tf32 = True if tf32 else False
 
     # 모든 설정 조합에 대해 벤치마크 실행
     if is_main_process():
         main_process_print(f"{'=' * 70}")
         main_process_print(f"DataLoader 성능 벤치마크 시작 (num_epochs: {num_epochs}, batch_size: {batch_size})")
-        main_process_print(f"테스트 파라미터: storage_type")
+        main_process_print(f"테스트 파라미터:")
+        main_process_print(f'  num_workers={num_workers}')
+        main_process_print(f'  pin_memory={pin_memory}')
+        main_process_print(f'  prefetch_factor={prefetch_factor}')
+        main_process_print(f'  dataloader_prefetch_cuda_steam={dataloader_prefetch_cuda_steam}')
+        main_process_print(f'  gradient_checkpointing={gradient_checkpointing}')
+        main_process_print(f'  gradient_accumulation_steps={gradient_accumulation_steps}')
+        main_process_print(f'  mixed_precision={mixed_precision}')
+        main_process_print(f'  tf32={tf32}')
+        main_process_print(f'  storage_type={storage_type}')
         main_process_print(f"{'=' * 70}")
         
     # 벤치마크 실행
+    result = benchmark_put_it_all_together(
+        dataset=dataset,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        prefetch_factor=(2 if num_workers > 0 else None), # defalut 2, 그아래로 설정 안 됨, workers > 0 에 None 으로 설정해도 2로 셋팅 
+        num_epochs=num_epochs,
+        mixed_precision=mixed_precision,
+        use_dataloader_prefetch_cuda_steam=dataloader_prefetch_cuda_steam,
+        gpu_iterations=gpu_iterations,
+        gradient_checkpointing=gradient_checkpointing,
+        gradient_accumulation_steps=gradient_accumulation_steps
+    )
     
-    for storage_type in storage_type_options:
-        
-        if is_main_process():
-            main_process_print("테스트 설정: ")
-            main_process_print(f'  storage_type={storage_type}')
-
-        
-        storage_config = StorageConfig(
-            storage_type=storage_type,
-            base_path="datasets",
-            s3_bucket="efficient-gpu-training"
-        )
-
-        dataset = SequenceDataset(
-            storage_config=storage_config,
-            max_seq_length=config['max_seq_length'],
-            cpu_iterations=cpu_iterations,
-            use_cache=config.get('dataloader_cache', False) # dataloader cache 옵션 
-        )
-
-        result = benchmark_storage(
-            dataset=dataset,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            pin_memory=pin_memory,
-            prefetch_factor=(2 if num_workers > 0 else None), # defalut 2, 그아래로 설정 안 됨, workers > 0 에 None 으로 설정해도 2로 셋팅 
-            num_epochs=num_epochs,
-            mixed_precision=mixed_precision,
-            use_dataloader_prefetch_cuda_steam=dataloader_prefetch_cuda_steam,
-            gpu_iterations=gpu_iterations,
-            gradient_checkpointing=gradient_checkpointing,
-            gradient_accumulation_steps=gradient_accumulation_steps
-        )
-        
-        # 결과 출력 - 메인 프로세스에서만
-        if is_main_process():
-            main_process_print(f"  처리량: {result['throughput']:.2f} samples/sec")
-            main_process_print(f"  소요 시간: {result['elapsed_time']:.2f} seconds")
-            main_process_print(f"  메모리 사용량: {result['final_memory_mb']} MB")
-        
-        # 결과 저장 - 메인 프로세스에서만
-        if is_main_process():
-            results.append(result)
+    # 결과 출력 - 메인 프로세스에서만
+    if is_main_process():
+        main_process_print(f"  처리량: {result['throughput']:.2f} samples/sec")
+        main_process_print(f"  소요 시간: {result['elapsed_time']:.2f} seconds")
+        main_process_print(f"  메모리 사용량: {result['final_memory_mb']} MB")
+    
+    # 결과 저장 - 메인 프로세스에서만
+    if is_main_process():
+        results.append(result)
             
 if __name__ == "__main__":
     

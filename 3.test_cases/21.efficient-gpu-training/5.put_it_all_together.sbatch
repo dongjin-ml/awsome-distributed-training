@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT-0
 
 #SBATCH --nodes=1 # number of nodes to use
-#SBATCH --job-name=4.STORAGE # name of your job
+#SBATCH --job-name=5.PUT-IT-ALL-TOGETHER # name of your job
 #SBATCH --output=logs/%x_%j.out # logfile for stdout
 #SBATCH --error=logs/%x_%j.err # logfile for stderr, remove it to merge both outputs
 #SBATCH --exclusive # job has exclusive use of the resource, no sharing
@@ -27,8 +27,8 @@ export TORCH_CPP_LOG_LEVEL=ERROR
 
 ## TORCHRUN path and 
 export TORCHRUN=./efficient_gpu_training/bin/torchrun
-export TRAIN_SCRIPT=./src/4.storage.py
-export CONFIG_PATH=./src/4.config_storage.yaml
+export TRAIN_SCRIPT=./src/5.put_it_all_together.py
+export CONFIG_PATH=./src/5.config_put_it_all_together.yaml
 
 ###########################
 ####### Torch Dist  #######
