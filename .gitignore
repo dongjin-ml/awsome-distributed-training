@@ -154,7 +154,7 @@ wandb/
 # Enroot container image
 *.sqsh
 
-efficeint_gpu_training/
+3.test_cases/21.efficient-gpu-training/efficient_gpu_training/
 3.test_cases/21.efficient-gpu-training/miniconda3/
 3.test_cases/21.efficient-gpu-training/datasets/
 3.test_cases/21.efficient-gpu-training/Miniconda3-latest-Linux-x86_64.sh
