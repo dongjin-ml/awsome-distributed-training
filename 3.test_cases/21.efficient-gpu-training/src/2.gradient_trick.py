@@ -278,6 +278,9 @@ if __name__ == "__main__":
     # 분산 환경 초기화를 보장
     if "WORLD_SIZE" in os.environ:
         dist.init_process_group(backend="nccl")
+        os.environ["DISTRIBUTED"] = "True" # str
+    else: 
+        os.environ["DISTRIBUTED"] = "False" # str
     # if "SM_TRAINING_ENV" in os.environ:
     #     import smdistributed.dataparallel.torch.torch_smddp
     #     dist.init_process_group(backend="smddp")

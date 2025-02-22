@@ -10,6 +10,7 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch.distributed as dist
+import torch.multiprocessing as mp
 
 from accelerate import Accelerator
 from accelerate.utils import set_seed
@@ -20,7 +21,7 @@ from model import get_model
 from utils.train_utils import print_gpu_utilization, is_main_process, main_process_print
 from custom_dataset import StorageConfig, SequenceDataset, StorageAwareDataLoader, PrefetchDataLoader
 
-def benchmark_mixed_precision(
+def benchmark_storage(
     dataset,
     batch_size,
     num_workers,
@@ -53,7 +54,11 @@ def benchmark_mixed_precision(
     }
     
     # DataLoader 구성
-    dataloader = StorageAwareDataLoader(dataset, **dataloader_kwargs)
+    dataloader = StorageAwareDataLoader(
+        dataset=dataset,
+        distributed=(True if os.environ["DISTRIBUTED"] == "True" else False),
+        **dataloader_kwargs
+    )
     
     # Accelerator 초기화
     accelerator = Accelerator(mixed_precision=mixed_precision)
@@ -171,23 +176,6 @@ def main():
     # 재현성을 위한 랜덤 시드 설정
     set_seed(42)
     
-    # 전통적인 PyTorch Dataset 클래스를 사용한 데이터셋 생성
-    storage_config = StorageConfig(
-        storage_type="luster",
-        base_path="datasets"
-    )
-
-    # C/GPU 연산량 조절
-    cpu_iterations = config['cpu_iterations'] # CPU 연산량 조절용 파라미터
-    gpu_iterations = config['gpu_iterations'] # GPU 연산량 조절용 파라미터
-
-    dataset = SequenceDataset(
-        storage_config=storage_config,
-        max_seq_length=config['max_seq_length'],
-        cpu_iterations=cpu_iterations,
-        use_cache=config.get('dataloader_cache', False) # dataloader cache 옵션 
-    )
-    
     # 테스트할 worker 수 범위
     num_workers = config.get('num_workers', 1)
     
@@ -206,9 +194,6 @@ def main():
     # dataloader_prefetch_cuda_steam
     dataloader_prefetch_cuda_steam = config.get('dataloader_prefetch_cuda_steam', False)
     
-    # 결과 저장할 리스트
-    results = []
-
     # Graident trick options
     gradient_checkpointing = config.get('gradient_checkpointing', False)
     gradient_accumulation_steps = config.get('gradient_accumulation_steps', 1) # > 1 then enalble, ==1 then disable
@@ -217,33 +202,67 @@ def main():
     mixed_precision = config.get("mixed_precision", "no")
 
     # Tensor Float 32
-    print("torch.backends.cuda.matmul.allow_tf32", torch.backends.cuda.matmul.allow_tf32)
-    print("torch.backends.cudnn.allow_tf32", torch.backends.cudnn.allow_tf32)
     tf32 = config.get("tf32", False)
     torch.backends.cuda.matmul.allow_tf32 = True if tf32 else False
     torch.backends.cudnn.allow_tf32 = True if tf32 else False
-    
+
+    # Storage
+    storage_type = config.get("storage_type", "lustre")
+
+    # 결과 저장할 리스트
+    results = []
+
+    # 전통적인 PyTorch Dataset 클래스를 사용한 데이터셋 생성
+    storage_config = StorageConfig(
+        storage_type="luster",  # "local", "s3", "lustre"
+        base_path="datasets",
+        s3_bucket="efficient-gpu-training"
+    )
+
+    # C/GPU 연산량 조절
+    cpu_iterations = config['cpu_iterations'] # CPU 연산량 조절용 파라미터
+    gpu_iterations = config['gpu_iterations'] # GPU 연산량 조절용 파라미터
+
+    dataset = SequenceDataset(
+        storage_config=storage_config,
+        max_seq_length=config['max_seq_length'],
+        cpu_iterations=cpu_iterations,
+        use_cache=config.get('dataloader_cache', False) # dataloader cache 옵션 
+    )
+
     # Test setting
-    #mixed_precision_options = ["fp16", "bf16", "no"]
-    tf32_options = [False, True]
+    storage_type_options = ["s3", "lustre"]
 
     # 모든 설정 조합에 대해 벤치마크 실행
     if is_main_process():
         main_process_print(f"{'=' * 70}")
         main_process_print(f"DataLoader 성능 벤치마크 시작 (num_epochs: {num_epochs}, batch_size: {batch_size})")
-        main_process_print(f"테스트 파라미터: mixed_precision, tf32")
+        main_process_print(f"테스트 파라미터: storage_type")
         main_process_print(f"{'=' * 70}")
         
     # 벤치마크 실행
     
-    for tf32 in tf32_options:
+    for storage_type in storage_type_options:
         
         if is_main_process():
             main_process_print("테스트 설정: ")
-            main_process_print(f'  mixed_precision={mixed_precision}')
-            main_process_print(f'  tf32={tf32}')
+            main_process_print(f'  storage_type={storage_type}')
 
-        result = benchmark_mixed_precision(
+        
+        storage_config = StorageConfig(
+            storage_type=storage_type,
+            base_path="datasets",
+            s3_bucket="efficient-gpu-training"
+        )
+
+        dataset = SequenceDataset(
+            storage_config=storage_config,
+            max_seq_length=config['max_seq_length'],
+            cpu_iterations=cpu_iterations,
+            use_cache=config.get('dataloader_cache', False) # dataloader cache 옵션 
+        )
+
+        result = benchmark_storage(
             dataset=dataset,
             batch_size=batch_size,
             num_workers=num_workers,
@@ -268,15 +287,22 @@ def main():
             results.append(result)
             
 if __name__ == "__main__":
+    
+    mp.set_start_method('spawn')  # 프로그램 시작 시 설정
+
     # 분산 환경 초기화를 보장
     if "WORLD_SIZE" in os.environ:
         dist.init_process_group(backend="nccl")
         os.environ["DISTRIBUTED"] = "True" # str
     else: 
         os.environ["DISTRIBUTED"] = "False" # str
+
+    
     # if "SM_TRAINING_ENV" in os.environ:
     #     import smdistributed.dataparallel.torch.torch_smddp
     #     dist.init_process_group(backend="smddp")
     # else:
     #     dist.init_process_group(backend="nccl")
+
+    print ('os.environ["DISTRIBUTED"]', os.environ["DISTRIBUTED"])
     main()

@@ -10,6 +10,7 @@ import io
 from typing import Optional, Dict, List, Union
 import logging
 import time
+from utils.train_utils import print_gpu_utilization, is_main_process, main_process_print
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class StorageConfig:
     """스토리지 설정을 관리하는 클래스"""
     def __init__(
         self,
-        storage_type: str = "luster",  # "local", "s3", "lustre"
+        storage_type: str = "lustre",  # "local", "s3", "lustre"
         base_path: str = "datasets",
         s3_bucket: Optional[str] = None,
         s3_access_key: Optional[str] = None,
@@ -36,9 +37,9 @@ class StorageConfig:
         # S3 파일시스템 초기화
         if self.storage_type == "s3":
             self.s3 = s3fs.S3FileSystem(
-                key=s3_access_key,
-                secret=s3_secret_key,
-                endpoint_url=s3_endpoint,
+                #key=s3_access_key,
+                #secret=s3_secret_key,
+                #endpoint_url=s3_endpoint,
                 use_listings_cache=False
             )
         
@@ -64,10 +65,11 @@ class StorageConfig:
                     df = pd.read_csv(f)
             else:
                 df = pd.read_csv(self.get_full_path(filename))
-            
             elapsed = time.time() - start_time
-            logger.debug(f"File read took {elapsed:.2f}s: {filename}")
-            #print (f"File read took {elapsed:.2f}s: {filename}")
+
+            #if is_main_process():
+            #    main_process_print(f"[{self.storage_type}] File read took {elapsed:.2f}s: {filename}")
+
             return df
             
         except Exception as e:
@@ -100,13 +102,12 @@ class SequenceDataset(Dataset):
         self.use_cache = use_cache
         self.is_training = is_training
         self.num_augments = cpu_iterations
-
-        print ("self.use_cache", self.use_cache)
         
         # 메타데이터 로드
-        self.metadata = pd.read_csv(
-            self.storage_config.get_full_path('metadata.csv')
-        )
+        #self.metadata = pd.read_csv(
+        #    self.storage_config.get_full_path('metadata.csv')
+        #)
+        self.metadata = self.storage_config.read_file('metadata.csv')
         
         # 전체 샘플 수 계산
         self.total_samples = self.metadata['num_samples'].sum()
@@ -270,8 +271,7 @@ class StorageAwareDataLoader(DataLoader):
         if num_workers == 0:  persistent_workers = False
 
         # 분산 학습을 위한 sampler 설정
-        sampler = DistributedSampler(dataset) if distributed else None
-        
+        sampler = DistributedSampler(dataset) if distributed else None        
         # DataLoader 초기화
         super().__init__(
             dataset=dataset,
