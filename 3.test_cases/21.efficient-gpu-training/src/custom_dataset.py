@@ -257,15 +257,18 @@ class StorageAwareDataLoader(DataLoader):
     def __init__(
         self,
         dataset: SequenceDataset,
+        prefetch_factor,
         batch_size: int = 32,
         shuffle: bool = True,
         num_workers: int = 4,
         pin_memory: bool = True,
         drop_last: bool = False,
         distributed: bool = False,
-        prefetch_factor: int = 2,
         persistent_workers: bool = True
     ):
+        # persistent_workers 설정
+        if num_workers == 0:  persistent_workers = False
+
         # 분산 학습을 위한 sampler 설정
         sampler = DistributedSampler(dataset) if distributed else None
         

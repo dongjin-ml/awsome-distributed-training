@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT-0
 
 #SBATCH --nodes=1 # number of nodes to use
-#SBATCH --job-name=DATALOADER-OPT # name of your job
+#SBATCH --job-name=1.DATA-PRELOADING # name of your job
 #SBATCH --output=logs/%x_%j.out # logfile for stdout
 #SBATCH --error=logs/%x_%j.err # logfile for stderr, remove it to merge both outputs
 #SBATCH --exclusive # job has exclusive use of the resource, no sharing
@@ -27,8 +27,8 @@ export TORCH_CPP_LOG_LEVEL=ERROR
 
 ## TORCHRUN path and 
 export TORCHRUN=./efficient_gpu_training/bin/torchrun
-export TRAIN_SCRIPT=./src/dataloader_optimization.py
-export CONFIG_PATH=./src/config.yaml
+export TRAIN_SCRIPT=./src/1.data_preloading.py
+export CONFIG_PATH=./src/config_data_preloading.yaml
 
 ###########################
 ####### Torch Dist  #######
@@ -60,7 +60,6 @@ fi
 echo "========================================================"
 echo "데이터로더 최적화 실험 시작"
 echo "========================================================"
-echo "기본 설정: num_workers=1, pin_memory=False"
 
 # 기본 설정으로 실행
 srun ${AUTO_RESUME} -l ${TORCHRUN} "${TORCHRUN_ARGS[@]}" $TRAIN_SCRIPT "${TRAINING_ARGS[@]}"
