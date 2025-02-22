@@ -28,7 +28,7 @@ export TORCH_CPP_LOG_LEVEL=ERROR
 ## TORCHRUN path and 
 export TORCHRUN=./efficient_gpu_training/bin/torchrun
 export TRAIN_SCRIPT=./src/1.data_preloading.py
-export CONFIG_PATH=./src/config_data_preloading.yaml
+export CONFIG_PATH=./src/1.config_data_preloading.yaml
 
 ###########################
 ####### Torch Dist  #######
