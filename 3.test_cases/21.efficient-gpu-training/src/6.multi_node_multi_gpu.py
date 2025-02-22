@@ -295,4 +295,29 @@ if __name__ == "__main__":
     else: 
         os.environ["DISTRIBUTED"] = "False" # str
 
+    
+    # if "SM_TRAINING_ENV" in os.environ:
+    # if args.distributed_backend == "smddp":
+    #    import smdistributed.dataparallel.torch.torch_smddp  # pylint: disable=unused-import
+    #     import smdistributed.dataparallel.torch.torch_smddp
+    #     dist.init_process_group(backend="smddp")
+    # else:
+    #     dist.init_process_group(backend="nccl")
+
+
+    #     # This is the only change needed to enable SMDDP in an FSDP script
+    # try:
+    #     backend = "smddp"
+    #     import smdistributed.dataparallel.torch.torch_smddp
+    # except ModuleNotFoundError:
+    #     backend = "nccl"
+    # print(f"using backend: {backend}")
+
+    # Install SMDDP wheel (only run for cuda11.8)
+# SMDDP_WHL="smdistributed_dataparallel-2.0.2-cp310-cp310-linux_x86_64.whl" \
+#   && wget -q https://smdataparallel.s3.amazonaws.com/binary/pytorch/2.0.1/cu118/2023-12-07/${SMDDP_WHL} \
+#   && pip install --force ${SMDDP_WHL} \
+#   && rm ${SMDDP_WHL}
+
+    print ('os.environ["DISTRIBUTED"]', os.environ["DISTRIBUTED"])
     main()

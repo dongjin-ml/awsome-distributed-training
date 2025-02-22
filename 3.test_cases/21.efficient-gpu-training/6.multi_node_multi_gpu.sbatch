@@ -28,8 +28,8 @@ export NCCL_P2P_DISABLE=0      # P2P 통신 활성화
 
 ## TORCHRUN path and scripts
 export TORCHRUN=./efficient_gpu_training/bin/torchrun
-export TRAIN_SCRIPT=./src/5.put_it_all_together.py
-export CONFIG_PATH=./src/5.config_put_it_all_together.yaml
+export TRAIN_SCRIPT=./src/6.multi_node_multi_gpu.py
+export CONFIG_PATH=./src/6.config_multi_node_multi_gpu.yaml
 
 ###########################
 ####### Torch Dist  #######
