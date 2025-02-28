@@ -104,8 +104,6 @@ class EnhancedModel(nn.Module):
     def gradient_checkpointing_disable(self):
         self.gradient_checkpointing = False
 
-
-
     def forward(self, input_ids, attention_mask=None, token_type_ids=None, labels=None):
         position_ids = torch.arange(input_ids.size(1), dtype=torch.long, device=input_ids.device)
         position_ids = position_ids.unsqueeze(0).expand_as(input_ids)

@@ -32,7 +32,7 @@ gradient_checkpointing: false
 gradient_accumulation_steps: 1 # > 1 then enalble, ==1 then disable
 
 # Mixed precision
-mixed_precision: "no" # "fp16", "bf16" or "no"
+mixed_precision: "bf16" # "fp16", "bf16" or "no"
 
 # Tensor Float 32 (32bit, 연산 속도 증가, mixed precision는 32, 16이 혼합되어 있는 형태, 따라서 32비트의 경우 해당 옵션으로 연산속도 개선 가능)
 # torch.backends.cuda.matmul.allow_tf32 = True if tf32 else False

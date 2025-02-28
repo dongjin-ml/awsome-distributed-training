@@ -68,7 +68,7 @@ class StorageConfig:
             elapsed = time.time() - start_time
 
             #if is_main_process():
-            #    main_process_print(f"[{self.storage_type}] File read took {elapsed:.2f}s: {filename}")
+            #   main_process_print(f"[{self.storage_type}] File read took {elapsed:.2f}s: {filename}")
 
             return df
             
