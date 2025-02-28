@@ -224,7 +224,7 @@ def main():
     torch.backends.cudnn.allow_tf32 = True if tf32 else False
     
     # Test setting
-    #mixed_precision_options = ["fp16", "bf16", "no"]
+    mixed_precision_options = ["no", "fp16", "bf16"]
     tf32_options = [False, True]
 
     # 모든 설정 조합에 대해 벤치마크 실행
